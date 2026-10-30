@@ -853,7 +853,7 @@ uint64_t slide_child_leak_stext(void) {
   }
   pr_info("slide cmp_requeue_pi ret=%ld errno=%d polls=%d\n",
           requeue_ret, requeue_errno, requeue_polls);
-  if (requeue_ret != -1 || requeue_errno != EDEADLK) {
+  if (requeue_ret != 1 && !(requeue_ret == -1 && requeue_errno == EDEADLK)) {
     return 0;
   }
   atomic_store(&slide_deadlock_seen, 1);

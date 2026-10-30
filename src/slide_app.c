@@ -26,6 +26,7 @@ static uint32_t slide_f_pi_chain;
 static atomic_int slide_waiter_ready;
 static atomic_int slide_waiter_waiting;
 static atomic_int slide_owner_started;
+static atomic_int slide_waiter_queued;
 static atomic_int slide_owner_acquired;
 static atomic_int slide_deadlock_seen;
 static atomic_int slide_waiter_ok;
@@ -687,6 +688,7 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
   pr_info("slide waiter f_wait=%u f_pi_target=%u f_pi_chain=%u\n",
           slide_f_wait, slide_f_pi_target, slide_f_pi_chain);
   slide_f_wait = 0;
+  atomic_store(&slide_waiter_queued, 1);
   errno = 0;
   long wait_ret = futex_op(&slide_f_wait, FUTEX_WAIT_REQUEUE_PI, 0, &timeout,
                            &slide_f_pi_target, 0);
@@ -734,6 +736,10 @@ void *slide_owner_thread(void *arg __attribute__((unused))) {
   }
 
   atomic_store(&slide_owner_started, 1);
+
+  while (!atomic_load(&slide_waiter_queued)) {
+    usleep(100);
+  }
 
   if (futex_op(&slide_f_pi_chain, FUTEX_LOCK_PI, 0, NULL, NULL, 0) != 0) {
     pr_error("slide owner lock chain errno=%d\n", errno);

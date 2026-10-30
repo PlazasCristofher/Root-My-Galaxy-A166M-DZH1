@@ -654,9 +654,18 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
   int tid = (int)SYSCHK(syscall(SYS_gettid));
   atomic_store(&slide_waiter_tid, tid);
 
-  if (futex_op(&slide_f_pi_chain, FUTEX_LOCK_PI, 0, NULL, NULL, 0) != 0) {
+  errno = 0;
+  long chain_ret = futex_op(&slide_f_pi_chain, FUTEX_LOCK_PI, 0, NULL, NULL, 0);
+  pr_info("slide waiter chain LOCK_PI ret=%ld errno=%d value=%u\n",
+          chain_ret, errno, slide_f_pi_chain);
+  if (chain_ret != 0 && errno != EOWNERDEAD) {
     pr_error("slide waiter lock chain errno=%d\n", errno);
     return NULL;
+  }
+  if (errno == EOWNERDEAD) {
+    pr_info("slide waiter chain EOWNERDEAD - recovering\n");
+    futex_op(&slide_f_pi_chain, FUTEX_UNLOCK_PI, 0, NULL, NULL, 0);
+    futex_op(&slide_f_pi_chain, FUTEX_LOCK_PI, 0, NULL, NULL, 0);
   }
 
   pr_info("slide waiter chain lock ok f_pi_chain=%u\n", slide_f_pi_chain);

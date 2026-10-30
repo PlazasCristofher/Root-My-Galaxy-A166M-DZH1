@@ -673,6 +673,9 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
     timeout.tv_nsec -= 1000000000L;
   }
 
+  pr_info("slide waiter f_wait=%u f_pi_target=%u f_pi_chain=%u\n",
+          slide_f_wait, slide_f_pi_target, slide_f_pi_chain);
+  slide_f_wait = 0;
   errno = 0;
   long wait_ret = futex_op(&slide_f_wait, FUTEX_WAIT_REQUEUE_PI, 0, &timeout,
                            &slide_f_pi_target, 0);

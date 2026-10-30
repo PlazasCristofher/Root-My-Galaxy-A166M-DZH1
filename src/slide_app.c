@@ -720,7 +720,6 @@ void *slide_owner_thread(void *arg __attribute__((unused))) {
   while (!atomic_load(&slide_waiter_waiting)) {
     usleep(100);
   }
-  usleep(200000);
 
   if (futex_op(&slide_f_pi_target, FUTEX_LOCK_PI, 0, NULL, NULL, 0) != 0) {
     pr_error("slide owner lock target errno=%d\n", errno);
@@ -734,20 +733,6 @@ void *slide_owner_thread(void *arg __attribute__((unused))) {
   }
 
   atomic_store(&slide_owner_started, 1);
-
-  long requeue_ret = 0;
-  int requeue_tries = 0;
-  for (requeue_tries = 0; requeue_tries < 500; requeue_tries++) {
-    errno = 0;
-    requeue_ret = futex_op(&slide_f_wait, FUTEX_CMP_REQUEUE_PI, 1, (void *)1,
-                           &slide_f_pi_target, 0);
-    if (requeue_ret == 1) {
-      break;
-    }
-    usleep(2000);
-  }
-  pr_info("slide owner CMP_REQUEUE_PI ret=%ld errno=%d tries=%d\n",
-          requeue_ret, errno, requeue_tries);
 
   if (futex_op(&slide_f_pi_chain, FUTEX_LOCK_PI, 0, NULL, NULL, 0) != 0) {
     pr_error("slide owner lock chain errno=%d\n", errno);

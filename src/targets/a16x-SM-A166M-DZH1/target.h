@@ -274,3 +274,6 @@
 #define FOPS_SHOW_FDINFO_OFF 0xe0
 
 #endif
+/* DZH1: el core 1 puede estar offline en reposo; el consumidor
+   se deja al scheduler para que corra en cualquier core vivo. */
+#define SLIDE_CONSUMER_PIN 0

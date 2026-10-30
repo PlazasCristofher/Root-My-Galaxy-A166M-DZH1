@@ -534,7 +534,9 @@ static int slide_wait_for_pselect_blocked(int tid, size_t timeout_usec,
 
 void *slide_consumer_thread(void *arg __attribute__((unused))) {
   disable_rseq_for_thread();
+#if defined(SLIDE_CONSUMER_PIN) && SLIDE_CONSUMER_PIN
   pin_to_core(CONSUMER_CORE);
+#endif
   atomic_store(&slide_consumer_ready, 1);
   int *errno_ptr = &errno;
 

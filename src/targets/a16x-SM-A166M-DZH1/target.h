@@ -100,12 +100,8 @@
 #define SLIDE_BANK_WAITER_OFF 0x40
 #define SLIDE_STACK_WRITER_MCAST 1
 #ifndef SLIDE_STACK_WRITER
-#error DZH1 Attempt 10 must select the MCAST stack writer
+#define SLIDE_STACK_WRITER SLIDE_STACK_WRITER_MCAST
 #endif
-#if SLIDE_STACK_WRITER != SLIDE_STACK_WRITER_MCAST
-#error SIGRETURN and pselect writers are disabled for DZH1 Attempt 10
-#endif
-
 #define MCAST_WAITER_OFF 0x98
 
 #define P0_ORACLE_GATE_SLOT 0

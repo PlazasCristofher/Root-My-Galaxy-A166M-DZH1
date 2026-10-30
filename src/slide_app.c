@@ -1,4 +1,6 @@
 #include "common.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #ifndef SLIDE_MAX_ATTEMPTS
 #define SLIDE_MAX_ATTEMPTS 20
@@ -32,6 +34,14 @@ static atomic_int slide_waiter_ok;
 static atomic_int slide_route_done;
 static atomic_int slide_waiter_tid;
 static atomic_int slide_stack_write_window;
+
+#if defined(SLIDE_STACK_WRITER) && \
+    defined(SLIDE_STACK_WRITER_MCAST) && \
+    SLIDE_STACK_WRITER == SLIDE_STACK_WRITER_MCAST
+static void slide_mcast_stack_copy(void);
+#endif
+
+
 static atomic_int slide_consume_calls;
 static atomic_int slide_consume_go;
 static atomic_int slide_consume_seen;
@@ -927,10 +937,12 @@ static int slide_child_trigger_write(void) {
 #if defined(SLIDE_STACK_WRITER) && \
     defined(SLIDE_STACK_WRITER_MCAST) && \
     SLIDE_STACK_WRITER == SLIDE_STACK_WRITER_MCAST
-  pr_info("slide pi stage=writer-enter tid=%d\n", tid);
+  pr_info("slide pi stage=writer-enter tid=%d\n",
+          atomic_load(&slide_waiter_tid));
   slide_mcast_stack_copy();
   pr_info("slide pi stage=writer-return tid=%d window=%d\n",
-          tid, atomic_load(&slide_stack_write_window));
+          atomic_load(&slide_waiter_tid),
+          atomic_load(&slide_stack_write_window));
 #endif
   while (!atomic_load(&slide_route_done)) {
     usleep(1000);

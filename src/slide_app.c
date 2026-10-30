@@ -707,7 +707,7 @@ void *slide_owner_thread(void *arg __attribute__((unused))) {
   while (!atomic_load(&slide_waiter_waiting)) {
     usleep(100);
   }
-  usleep(20000);
+  usleep(200000);
 
   if (futex_op(&slide_f_pi_target, FUTEX_LOCK_PI, 0, NULL, NULL, 0) != 0) {
     pr_error("slide owner lock target errno=%d\n", errno);

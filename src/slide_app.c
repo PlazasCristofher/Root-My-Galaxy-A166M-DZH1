@@ -697,12 +697,16 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
     return NULL;
   }
   atomic_store(&slide_waiter_ok, 1);
+  pr_info("slide pi stage=waiter-unlock-enter tid=%d chain=%u\n",
+          tid, slide_f_pi_chain);
   if (futex_op(&slide_f_pi_chain, FUTEX_UNLOCK_PI, 0, NULL, NULL, 0) != 0) {
     pr_error("slide waiter unlock chain errno=%d\n", errno);
     atomic_store(&slide_route_done, 1);
     return NULL;
   }
+  pr_info("slide pi stage=waiter-unlock-return tid=%d\n", tid);
   slide_pselect_stack_copy();
+  pr_info("slide pi stage=waiter-stack-copied tid=%d\n", tid);
   atomic_store(&slide_route_done, 1);
 
   for (;;) {

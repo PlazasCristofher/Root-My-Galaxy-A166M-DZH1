@@ -807,6 +807,9 @@ uint64_t slide_child_leak_stext(void) {
   pthread_t waiter;
   pthread_t owner;
   pthread_t consumer;
+  slide_f_wait = 0;
+  slide_f_pi_target = 0;
+  slide_f_pi_chain = 0;
   SYSCHK(pthread_create(&waiter, NULL, slide_waiter_thread, NULL));
   SYSCHK(pthread_create(&owner, NULL, slide_owner_thread, NULL));
   SYSCHK(pthread_create(&consumer, NULL, slide_consumer_thread, NULL));
@@ -855,6 +858,9 @@ static int slide_child_trigger_write(void) {
   pthread_t waiter;
   pthread_t owner;
   pthread_t consumer;
+  slide_f_wait = 0;
+  slide_f_pi_target = 0;
+  slide_f_pi_chain = 0;
   SYSCHK(pthread_create(&waiter, NULL, slide_waiter_thread, NULL));
   SYSCHK(pthread_create(&owner, NULL, slide_owner_thread, NULL));
   SYSCHK(pthread_create(&consumer, NULL, slide_consumer_thread, NULL));

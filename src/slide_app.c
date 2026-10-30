@@ -39,6 +39,7 @@ static atomic_int slide_stack_write_window;
     defined(SLIDE_STACK_WRITER_MCAST) && \
     SLIDE_STACK_WRITER == SLIDE_STACK_WRITER_MCAST
 static void slide_mcast_stack_copy(void);
+void *slide_consumer_thread(void *arg __attribute__((unused)));
 #endif
 
 
@@ -391,6 +392,14 @@ void slide_pselect_stack_copy(void) {
 #endif
   for (int index = 0; index < slide_syscall_pad; index++) {
     syscall(SYS_gettid);
+  }
+  pthread_t local_consumer;
+  int have_local_consumer = 0;
+  if (pthread_create(&local_consumer, NULL, slide_consumer_thread, NULL) == 0) {
+    have_local_consumer = 1;
+    while (!atomic_load(&slide_consumer_ready)) {
+      usleep(1000);
+    }
   }
   atomic_store(&slide_consume_go, 1);
   errno = 0;

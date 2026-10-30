@@ -835,8 +835,18 @@ uint64_t slide_child_leak_stext(void) {
     usleep(1000);
   }
 
+  pr_info("slide pre-requeue flags waiting=%d started=%d consumer=%d\n",
+          atomic_load(&slide_waiter_waiting),
+          atomic_load(&slide_owner_started),
+          atomic_load(&slide_consumer_ready));
+
   /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
   usleep(SLIDE_REQUEUE_ARM_USEC);
+
+  pr_info("slide pre-requeue flags waiting=%d started=%d consumer=%d\n",
+          atomic_load(&slide_waiter_waiting),
+          atomic_load(&slide_owner_started),
+          atomic_load(&slide_consumer_ready));
 
   /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
   usleep(SLIDE_REQUEUE_ARM_USEC);
@@ -892,8 +902,18 @@ static int slide_child_trigger_write(void) {
     usleep(1000);
   }
 
+  pr_info("slide pre-requeue flags waiting=%d started=%d consumer=%d\n",
+          atomic_load(&slide_waiter_waiting),
+          atomic_load(&slide_owner_started),
+          atomic_load(&slide_consumer_ready));
+
   /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
   usleep(SLIDE_REQUEUE_ARM_USEC);
+
+  pr_info("slide pre-requeue flags waiting=%d started=%d consumer=%d\n",
+          atomic_load(&slide_waiter_waiting),
+          atomic_load(&slide_owner_started),
+          atomic_load(&slide_consumer_ready));
 
   /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
   usleep(SLIDE_REQUEUE_ARM_USEC);

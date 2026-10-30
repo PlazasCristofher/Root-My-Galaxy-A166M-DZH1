@@ -678,7 +678,7 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
   struct timespec timeout;
   SYSCHK(clock_gettime(CLOCK_MONOTONIC, &timeout));
   timeout.tv_nsec += SLIDE_WAIT_NSEC;
-  if (timeout.tv_nsec >= 1000000000L) {
+  while (timeout.tv_nsec >= 1000000000L) {
     timeout.tv_sec++;
     timeout.tv_nsec -= 1000000000L;
   }

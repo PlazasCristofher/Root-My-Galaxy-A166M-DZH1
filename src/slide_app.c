@@ -692,6 +692,8 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
                            &slide_f_pi_target, 0);
   int wait_errno = errno;
   pr_info("slide wait_requeue_pi ret=%ld errno=%d\n", wait_ret, wait_errno);
+  pr_info("slide pi stage=wait-return ret=%ld errno=%d tid=%d\n",
+          wait_ret, wait_errno, tid);
   if (wait_ret != -1 || wait_errno != ETIMEDOUT) {
     atomic_store(&slide_route_done, 1);
     return NULL;

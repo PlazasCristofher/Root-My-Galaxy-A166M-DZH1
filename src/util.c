@@ -154,6 +154,7 @@ uintptr_t binwrite_target;
 uintptr_t slide_p0_offset;
 uintptr_t slide_oracle_parent;
 uintptr_t slide_oracle_target;
+int p0_physical_write_ok;
 uintptr_t p0_gate_page_struct;
 uintptr_t p0_probe_page_struct;
 #if defined(APP_REQUIRE_FRESH_P0_SESSION) && APP_REQUIRE_FRESH_P0_SESSION

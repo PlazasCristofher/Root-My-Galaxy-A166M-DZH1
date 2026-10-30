@@ -986,6 +986,7 @@ static int slide_trigger_physical_state(void) {
   SYSCHK(waitpid(child, &status, 0));
   int ok = WIFEXITED(status) && WEXITSTATUS(status) == 0;
   pr_info("p0 physical write status=%d ok=%d\n", status, ok);
+  p0_physical_write_ok = ok;
   return ok;
 }
 

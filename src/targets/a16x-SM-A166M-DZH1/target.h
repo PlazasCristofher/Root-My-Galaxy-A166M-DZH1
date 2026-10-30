@@ -277,3 +277,7 @@
 /* DZH1: el core 1 puede estar offline en reposo; el consumidor
    se deja al scheduler para que corra en cualquier core vivo. */
 #define SLIDE_CONSUMER_PIN 0
+
+/* DZH1: el pselect entra despues del MCAST; mas margen para la ventana. */
+#undef PSELECT_TIMEOUT_SEC
+#define PSELECT_TIMEOUT_SEC 3

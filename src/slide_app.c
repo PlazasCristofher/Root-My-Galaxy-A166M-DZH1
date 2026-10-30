@@ -828,6 +828,9 @@ uint64_t slide_child_leak_stext(void) {
   /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
   usleep(SLIDE_REQUEUE_ARM_USEC);
 
+  pr_info("slide pi stage=cmp-enter waiter_tid=%d\n",
+          atomic_load(&slide_waiter_tid));
+
   long requeue_ret = 0;
   int requeue_errno = 0;
   int requeue_polls = 0;
@@ -844,7 +847,7 @@ uint64_t slide_child_leak_stext(void) {
       usleep(SLIDE_REQUEUE_POLL_USEC);
     }
   }
-  pr_info("slide cmp_requeue_pi ret=%ld errno=%d polls=%d\n",
+  pr_info("slide pi stage=cmp-return ret=%ld errno=%d polls=%d\n",
           requeue_ret, requeue_errno, requeue_polls);
   if (requeue_ret != 1 && !(requeue_ret == -1 && requeue_errno == EDEADLK)) {
     return 0;
@@ -887,6 +890,9 @@ static int slide_child_trigger_write(void) {
   /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
   usleep(SLIDE_REQUEUE_ARM_USEC);
 
+  pr_info("slide pi stage=cmp-enter waiter_tid=%d\n",
+          atomic_load(&slide_waiter_tid));
+
   long requeue_ret = 0;
   int requeue_errno = 0;
   int requeue_polls = 0;
@@ -903,9 +909,12 @@ static int slide_child_trigger_write(void) {
       usleep(SLIDE_REQUEUE_POLL_USEC);
     }
   }
+  pr_info("slide pi stage=cmp-return ret=%ld errno=%d polls=%d\n",
+          requeue_ret, requeue_errno, requeue_polls);
   if (requeue_ret != -1 || requeue_errno != EDEADLK) {
     return 0;
   }
+  pr_info("slide pi stage=deadlock-accepted\n");
   atomic_store(&slide_deadlock_seen, 1);
   while (!atomic_load(&slide_route_done)) {
     usleep(1000);

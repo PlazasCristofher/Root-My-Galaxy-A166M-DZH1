@@ -659,6 +659,7 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
     return NULL;
   }
 
+  pr_info("slide waiter chain lock ok f_pi_chain=%u\n", slide_f_pi_chain);
   atomic_store(&slide_waiter_ready, 1);
   atomic_store(&slide_waiter_waiting, 1);
   while (!atomic_load(&slide_owner_started)) {

@@ -672,7 +672,7 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
   atomic_store(&slide_waiter_ready, 1);
   atomic_store(&slide_waiter_waiting, 1);
   /* El owner ya tomo el target: f_pi_target tiene su TID. */
-  while (atomic_load(&slide_f_pi_target) == 0) {
+  while (__atomic_load_n(&slide_f_pi_target, __ATOMIC_SEQ_CST) == 0) {
     usleep(1000);
   }
 

@@ -734,6 +734,12 @@ void *slide_owner_thread(void *arg __attribute__((unused))) {
   }
 
   atomic_store(&slide_owner_started, 1);
+
+  errno = 0;
+  long requeue_ret = futex_op(&slide_f_wait, FUTEX_CMP_REQUEUE_PI, 1, (void *)1,
+                              &slide_f_pi_target, 0);
+  pr_info("slide owner CMP_REQUEUE_PI ret=%ld errno=%d\n", requeue_ret, errno);
+
   if (futex_op(&slide_f_pi_chain, FUTEX_LOCK_PI, 0, NULL, NULL, 0) != 0) {
     pr_error("slide owner lock chain errno=%d\n", errno);
     return NULL;

@@ -671,6 +671,11 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
   pr_info("slide waiter chain lock ok f_pi_chain=%u\n", slide_f_pi_chain);
   atomic_store(&slide_waiter_ready, 1);
   atomic_store(&slide_waiter_waiting, 1);
+  /* El owner ya tomo el target: f_pi_target tiene su TID. */
+  while (atomic_load(&slide_f_pi_target) == 0) {
+    usleep(1000);
+  }
+
   struct timespec timeout;
   SYSCHK(clock_gettime(CLOCK_MONOTONIC, &timeout));
   timeout.tv_nsec += SLIDE_WAIT_NSEC;

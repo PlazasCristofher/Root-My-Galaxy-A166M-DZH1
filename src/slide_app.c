@@ -735,9 +735,6 @@ void *slide_owner_thread(void *arg __attribute__((unused))) {
 
   atomic_store(&slide_owner_started, 1);
 
-  /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI antes de tocar la cadena. */
-  usleep(SLIDE_REQUEUE_ARM_USEC);
-
   if (futex_op(&slide_f_pi_chain, FUTEX_LOCK_PI, 0, NULL, NULL, 0) != 0) {
     pr_error("slide owner lock chain errno=%d\n", errno);
     return NULL;

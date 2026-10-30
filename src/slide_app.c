@@ -660,6 +660,7 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
   }
 
   atomic_store(&slide_waiter_ready, 1);
+  atomic_store(&slide_waiter_waiting, 1);
   while (!atomic_load(&slide_owner_started)) {
     usleep(1000);
   }
@@ -672,7 +673,6 @@ void *slide_waiter_thread(void *arg __attribute__((unused))) {
     timeout.tv_nsec -= 1000000000L;
   }
 
-  atomic_store(&slide_waiter_waiting, 1);
   errno = 0;
   long wait_ret = futex_op(&slide_f_wait, FUTEX_WAIT_REQUEUE_PI, 0, &timeout,
                            &slide_f_pi_target, 0);

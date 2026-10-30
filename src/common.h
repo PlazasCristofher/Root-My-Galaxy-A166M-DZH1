@@ -331,6 +331,7 @@ extern ssize_t slide_bootid_restore_ret;
 extern uintptr_t slide_p0_offset;
 extern uintptr_t slide_oracle_parent;
 extern uintptr_t slide_oracle_target;
+extern int p0_physical_write_ok;
 extern uintptr_t p0_gate_page_struct;
 extern uintptr_t p0_probe_page_struct;
 extern uintptr_t fops_data_probe_addr;

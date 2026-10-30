@@ -835,6 +835,12 @@ uint64_t slide_child_leak_stext(void) {
     usleep(1000);
   }
 
+  /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
+  usleep(SLIDE_REQUEUE_ARM_USEC);
+
+  /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
+  usleep(SLIDE_REQUEUE_ARM_USEC);
+
   long requeue_ret = 0;
   int requeue_errno = 0;
   int requeue_polls = 0;
@@ -885,6 +891,12 @@ static int slide_child_trigger_write(void) {
          !atomic_load(&slide_consumer_ready)) {
     usleep(1000);
   }
+
+  /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
+  usleep(SLIDE_REQUEUE_ARM_USEC);
+
+  /* Dar tiempo a que el waiter entre al WAIT_REQUEUE_PI. */
+  usleep(SLIDE_REQUEUE_ARM_USEC);
 
   long requeue_ret = 0;
   int requeue_errno = 0;

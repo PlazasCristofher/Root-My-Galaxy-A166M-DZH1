@@ -255,7 +255,7 @@ int try_cfi_stage(void) {
     return 0;
   }
 
-  uintptr_t misc_fops = data_addr(ASHMEM_MISC_FOPS);
+  uintptr_t misc_fops = text_addr(ASHMEM_MISC_FOPS);
   uintptr_t misc_fops_llseek = misc_fops + FOPS_LLSEEK_OFF;
   uint64_t pre_fops = 0;
   ssize_t pre_rb = configfs_read_once(

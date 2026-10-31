@@ -63,7 +63,7 @@ static int slide_tracefs_parse_page(
               (unsigned long long)(caller - link_caller));
       if (caller >= link_caller) {
         uint64_t candidate = caller - link_caller;
-        if (candidate <= 0x1f0000ULL && (candidate & 0xffffULL) == 0) {
+        if (candidate == 0) {
           pr_success("slide tracefs caller=%016llx candidate=%08llx\n",
                      (unsigned long long)caller,
                      (unsigned long long)candidate);

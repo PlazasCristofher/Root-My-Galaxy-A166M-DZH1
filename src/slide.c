@@ -75,6 +75,7 @@ static int slide_tracefs_parse_page(
 }
 
 static int slide_tracefs_leak_kernel_base(void) {
+  pr_info("slide tracefs enter\n");
   static const char tracing_on[] =
       SLIDE_TRACEFS_ROOT "/tracing_on";
   static const char trace[] =

